@@ -52,13 +52,44 @@ router.post('/', (req, res) => {
         });
 });
 
+// LOGIN route
+//http://localhost:3001/api/users/login
+// POST is more sucure than GET
+router.post('/login', (req, res) => {
+    // expects {email: 'lernantino@gmail.com', password: 'password1234'}
+  User.findOne({
+    where: {
+      email: req.body.email
+    }
+  }).then(dbUserData => {
+    if (!dbUserData) {
+      res.status(400).json({ message: 'No user with that email address!' });
+      return;
+    }
+
+    //res.json({ user: dbUserData });
+
+    // Verify user
+    const validPassword = dbUserData.checkPassword(req.body.password);
+    if (!validPassword) {
+        res.status(400).json({ message: 'Incorrect password!' });
+        return;
+      }
+      
+      res.json({ user: dbUserData, message: 'You are now logged in!' });
+
+  });  
+
+})
+
 // PUT /api/users/1
 router.put('/:id', (req, res) => {
     // expects {username: 'Lernantino', email: 'lernantino@gmail.com', password: 'password1234'}
 
     // if req.body has exact key/value pairs to match the model, you can just use `req.body` instead
     User.update(req.body, { //update creates and looks up data
-            where: {
+        individualHooks: true,
+        where: {
                 id: req.params.id
             }
         })
